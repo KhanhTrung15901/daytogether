@@ -1,0 +1,30 @@
+trigger:
+- staging
+
+jobs:
+- job: 'build'
+  displayName: 'build-frontend'
+  continueOnError: false
+  pool:
+    name: 'Runner-01'
+  steps:
+  - script: |
+      wget https://raw.githubusercontent.com/bibichannel/greenblue-deployment/main/frontend/Dockerfile
+    displayName: 'Get necessary files on github repository'
+
+  - script: |
+      docker build -t fronend-stg:latest .
+      echo "this is azure-pipeline.stg.yml in staging branch"
+    displayName: 'Build image'
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(Build.SourcesDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+      ArtifactName: 'sentMail-fe-stg'
+      publishLocation: 'Container'
